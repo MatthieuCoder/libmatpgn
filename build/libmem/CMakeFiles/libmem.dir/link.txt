@@ -1,2 +1,0 @@
-/usr/bin/ar qc liblibmem.a CMakeFiles/libmem.dir/kv.c.o CMakeFiles/libmem.dir/vector.c.o
-/usr/bin/ranlib liblibmem.a

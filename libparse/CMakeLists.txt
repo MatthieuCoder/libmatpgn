@@ -2,7 +2,7 @@ set(PACKCC packcc CACHE FILEPATH "packcc")
 
 add_custom_command(
     OUTPUT parser.c parser.h
-    COMMAND ${PACKCC} ARGS -d -o parser ${CMAKE_CURRENT_SOURCE_DIR}/parser.peg
+    COMMAND ${PACKCC} ARGS -o parser ${CMAKE_CURRENT_SOURCE_DIR}/parser.peg
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/parser.peg
     VERBATIM
 )

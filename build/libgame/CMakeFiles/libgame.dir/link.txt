@@ -1,2 +1,0 @@
-/usr/bin/ar qc liblibgame.a CMakeFiles/libgame.dir/game.c.o CMakeFiles/libgame.dir/round.c.o CMakeFiles/libgame.dir/san.c.o
-/usr/bin/ranlib liblibgame.a

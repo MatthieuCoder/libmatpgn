@@ -17,7 +17,7 @@ typedef struct vector_t
 
 /// Initializes a new vector instance.
 vector* vector_new(size_t item_size);
-void vector_push(vector*, void*);
+void* vector_push(vector*);
 void vector_allocate(vector*, int);
 void* vector_at(vector*, int);
 

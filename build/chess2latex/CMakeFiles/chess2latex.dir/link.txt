@@ -1,1 +1,0 @@
-/usr/bin/cc -g CMakeFiles/chess2latex.dir/main.c.o -o chess2latex  ../libparse/liblibparse.a ../libgame/liblibgame.a ../libmem/liblibmem.a 

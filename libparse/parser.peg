@@ -15,50 +15,91 @@ static const char *dbg_str[] = { "Evaluating rule", "Matched rule", "Abandoning 
 #include "libmem/kv.h"
 }
 
-pgn <- h:header EOL r:rounds {
-    game* make_game = game_new();
-    printf("Got header from pointer %x pusing into %x", h, make_game);
-    make_game->header = (vector*)h;
-    $$ = make_game;
+# Maing PGN entry representation.
+pgn <- header_part:header EOL rounds_part:rounds {
+    game* n_game = game_new();
+    n_game->header = (vector*)header_part;
+    n_game->round =  (vector*)rounds_part;
+    printf("PGN entry parsing is finished. Got header_part=%x and rounds_part=%x into make_server=%x\n", header_part, rounds_part, n_game);
+    
+    $$ = n_game;
 }
 
-header <- '[' _ k:stitle _ '"' val:string '"' ']' EOL n:header {
-    vector* kvl = n;
-    kv kev;
-    kev.key = k;
-    kev.value = val;
-    vector_push(kvl, &kev);
-    printf("Pushed new item into meta array base=%x\n", kvl);
-    $$ = kvl;
+# Representation of a header entry key-pair
+# This is parsed using a recursive technique where 
+# the last line (empty line) creates the parent vector.
+header <- '[' _ key_name:string _ '"' key_value:string_with_spaces? '"' ']' EOL next_entry:header {
+    // Adding every entry to a vector (resizable array) for now.
+    kv* entry = vector_push(next_entry);
+    entry->key = key_name;
+    entry->value = key_value;
+    $$ = next_entry;
 } / {
-    printf("Created root kv\n");
+    // Creates the root vector during the last line.
+    // We specify the size of a kv since it is a known-size and moveable type.
     $$ = vector_new(sizeof(kv));
 }
 
-game_end <- "1-0"     { printf("ENDSTR\n"); $$ = GS_BLACK_WON; }
-          / "0-1"     { printf("ENDSTR\n"); $$ = GS_WHITE_WON; }
-          / "1/2-1/2" { printf("ENDSTR\n"); $$ = GS_TIE;       }
-          / "*"       { printf("ENDSTR\n"); $$ = GS_UNKNOWN;   }
+# Represents every end-game state given by the pgn specification.
+game_end <- "1-0"     { $$ = GS_BLACK_WON; }
+          / "0-1"     { $$ = GS_WHITE_WON; }
+          / "1/2-1/2" { $$ = GS_TIE;       }
+          / "*"       { $$ = GS_UNKNOWN;   }
 
-round <- n:number "." _ s:stitle {}
+file <- 'a' / 'b' / 'c' / 'd' / 'e' / 'f' / 'g' / 'h'
+rank <- '1' / '2' / '3' / '4' / '5' / '6' / '7' / '8'
+square <- file rank
 
-rounds <- round _ p:rounds {
-    printf("round parseing start\n");
-} / game_end {
-    printf("Parsed eol game\n");
+# N for Knight
+# B for Bishop
+# R for rook
+# Q for queen
+# K for king
+san_piece <- 'N' / 'B' / 'R' / 'Q' / 'K'
+
+int_move <- 
+    file 'x' file rank {}
+    / file 'x' file rank 'e.p.' {}
+    / file rank '=' san_piece {}
+    / san_piece file rank {}
+    / san_piece 'x' file rank {}
+    / san_piece file square {}
+    / san_piece rank square {}
+    / san_piece file 'x' square {}
+    / san_piece rank 'x' square {}
+    / file rank san_piece {}
+    / 'O-O' {}
+    / 'O-O-O' {}
+    / file rank {}
+
+checkmate_mark <- '++' / '#'
+move <- int_move checkmate_mark {}
+    / int_move '+' {}
+    / int_move {}
+
+# san_end <- EOL / _
+comment_complete_move <- number '...'
+comment <- '{' string_with_spaces '}' _ comment_complete_move?
+
+move_comment <- 
+    move EOL? _ comment?
+    / move
+
+san <- move_comment {}
+
+# Represent a round recursively using the same technique as the header
+rounds <- game_end {
+    printf("INIT ROUND STACK\n");
+    $$ = vector_new(sizeof(round));
+} / round_number:number '.' EOL? _? san (_ san)? next_entry:rounds {
+    round* new = vector_push(next_entry);
+    new->number = round_number;
+    $$ = next_entry;
 }
 
 _      <- [ \t]*
 EOL    <- '\n' / '\r\n' / '\r'
-string <- < [A-Za-z0-9 \t]+ > {
-    printf("String parsed: %s\n", $1);
-    $$ = $1;
-}
-
-stitle <- <[A-Za-z0-9]+> {
-    printf("String stitle %s\n", $1);
-    $$ = $1;
-}
-
-number <- <[0-9]+> {}
+string_with_spaces <- < [A-Za-z0-9+-.,?$' \n\t]+ > { $$ = $1; }
+string <- <[A-Za-z0-9+-.,?$]+> { $$ = $1; }
+number <- <[0-9]+> { $$ = atoi($1); }
 %%

@@ -11,21 +11,21 @@ vector* vector_new(size_t item_size) {
     return vec;
 }
 
-void vector_push(vector* vector, void* item) {
+void* vector_push(vector* vector) {
     if (vector->length + 1 > vector->capacity) {
         vector_allocate(vector, vector->capacity * 2);
     }
 
     void* start_address = vector->data + vector->item_size * (vector->length);
     printf("Item push to address: %x (base pt=%x) for %i bytes\n", start_address, vector->data, vector->item_size);
-    memcpy(start_address, item, vector->item_size);
-
     vector->length++;
+
+    return start_address;
 }
 
 void vector_allocate(vector* vector, int new_size) {
     // we do not allow downsizing the memory area.
-    if (vector->length < new_size) {
+    if (vector->length > new_size) {
         return;
     }
 
@@ -38,5 +38,6 @@ void* vector_at(vector* vector, int index) {
         return (void*)0;
     }
     void* data = vector->data + index * vector->item_size;
+    //printf("Recovering data from index %i at address %x (base pt=%x)\n", index, data, vector);
     return data;
 }
