@@ -1,0 +1,151 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4
+					],
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "libgame",
+					"jsonFile" : "directory-libgame-Debug-e04a3c6b0fbca29bc29a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libgame",
+					"targetIndexes" : 
+					[
+						1
+					]
+				},
+				{
+					"build" : "libmem",
+					"jsonFile" : "directory-libmem-Debug-f995176a9da422326657.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libmem",
+					"targetIndexes" : 
+					[
+						2
+					]
+				},
+				{
+					"build" : "libparse",
+					"jsonFile" : "directory-libparse-Debug-3ed8dcb955a7864c3914.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libparse",
+					"targetIndexes" : 
+					[
+						3
+					]
+				},
+				{
+					"build" : "chess2latex",
+					"jsonFile" : "directory-chess2latex-Debug-058cfa79965827b26f5f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "chess2latex",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					],
+					"name" : "Chess2LaTeX",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 4,
+					"id" : "chess2latex::@53b6c1fd0baf0714ebe9",
+					"jsonFile" : "target-chess2latex-Debug-cd8d88877cf6e7c838b5.json",
+					"name" : "chess2latex",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "libgame::@800a48f8c55bf68108a4",
+					"jsonFile" : "target-libgame-Debug-f5e80340f3d6476dc768.json",
+					"name" : "libgame",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "libmem::@6a617aebebbb0238c247",
+					"jsonFile" : "target-libmem-Debug-681bbed6bd6db2e84493.json",
+					"name" : "libmem",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "libparse::@aa650e8e26c600db3019",
+					"jsonFile" : "target-libparse-Debug-6dff2025665c1ac9ff89.json",
+					"name" : "libparse",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/matthieup/chess2latex/build",
+		"source" : "/home/matthieup/chess2latex"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

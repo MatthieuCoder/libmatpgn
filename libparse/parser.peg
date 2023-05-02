@@ -1,0 +1,64 @@
+%prefix "parser"
+
+%value "void *"
+
+%source {
+
+static const char *dbg_str[] = { "Evaluating rule", "Matched rule", "Abandoning rule" };
+#define PCC_DEBUG(auxil, event, rule, level, pos, buffer, length) \
+    fprintf(stderr, "%*s%s %s @%zu\n", (int)((level) * 2), "", dbg_str[event], rule, pos, (int)(length))
+
+#include "libgame/san.h"
+#include "libmem/vector.h"
+#include "libgame/round.h"
+#include "libgame/game.h"
+#include "libmem/kv.h"
+}
+
+pgn <- h:header EOL r:rounds {
+    game* make_game = game_new();
+    printf("Got header from pointer %x pusing into %x", h, make_game);
+    make_game->header = (vector*)h;
+    $$ = make_game;
+}
+
+header <- '[' _ k:stitle _ '"' val:string '"' ']' EOL n:header {
+    vector* kvl = n;
+    kv kev;
+    kev.key = k;
+    kev.value = val;
+    vector_push(kvl, &kev);
+    printf("Pushed new item into meta array base=%x\n", kvl);
+    $$ = kvl;
+} / {
+    printf("Created root kv\n");
+    $$ = vector_new(sizeof(kv));
+}
+
+game_end <- "1-0"     { printf("ENDSTR\n"); $$ = GS_BLACK_WON; }
+          / "0-1"     { printf("ENDSTR\n"); $$ = GS_WHITE_WON; }
+          / "1/2-1/2" { printf("ENDSTR\n"); $$ = GS_TIE;       }
+          / "*"       { printf("ENDSTR\n"); $$ = GS_UNKNOWN;   }
+
+round <- n:number "." _ s:stitle {}
+
+rounds <- round _ p:rounds {
+    printf("round parseing start\n");
+} / game_end {
+    printf("Parsed eol game\n");
+}
+
+_      <- [ \t]*
+EOL    <- '\n' / '\r\n' / '\r'
+string <- < [A-Za-z0-9 \t]+ > {
+    printf("String parsed: %s\n", $1);
+    $$ = $1;
+}
+
+stitle <- <[A-Za-z0-9]+> {
+    printf("String stitle %s\n", $1);
+    $$ = $1;
+}
+
+number <- <[0-9]+> {}
+%%
