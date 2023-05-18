@@ -6,3 +6,5 @@ add_subdirectory(libgame)
 add_subdirectory(libmem)
 add_subdirectory(libparse)
 add_subdirectory(chess2latex)
+
+add_subdirectory(packcc)

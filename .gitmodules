@@ -1,3 +1,6 @@
 [submodule "third_party/packcc"]
 	path = third_party/packcc
 	url = https://github.com/arithy/packcc.git
+[submodule "packcc"]
+	path = packcc
+	url = https://github.com/arithy/packcc.git
