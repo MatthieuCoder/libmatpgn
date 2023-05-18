@@ -7,7 +7,7 @@ add_custom_command(
     VERBATIM
 )
 
-add_library(libparse parser.c)
+add_library(libparse parser.c system.c)
 target_include_directories(libparse BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(libparse PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 target_link_libraries(libparse libmem)

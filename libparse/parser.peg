@@ -1,12 +1,18 @@
 %prefix "parser"
 
 %value "void *"
+%auxil "system_t *"
+
+%header {
+#include "libparse/system.h"
+}
 
 %source {
-
 static const char *dbg_str[] = { "Evaluating rule", "Matched rule", "Abandoning rule" };
 #define PCC_DEBUG(auxil, event, rule, level, pos, buffer, length) \
     fprintf(stderr, "%*s%s %s @%zu\n", (int)((level) * 2), "", dbg_str[event], rule, pos, (int)(length))
+#define PCC_GETCHAR(auxil) system_read_char(auxil)
+#define PCC_FREE(auxil, ptr) {}
 
 #include "libgame/san.h"
 #include "libmem/vector.h"
@@ -25,10 +31,11 @@ pgn <- header_part:header EOL rounds_part:rounds {
     $$ = n_game;
 }
 
+header_value <- [^"]* { $$ = $0; }
 # Representation of a header entry key-pair
 # This is parsed using a recursive technique where 
 # the last line (empty line) creates the parent vector.
-header <- '[' _ key_name:string _ '"' key_value:string_with_spaces? '"' ']' EOL next_entry:header {
+header <- '[' _ key_name:header_value _ '"' key_value:header_value '"' ']' EOL next_entry:header {
     // Adding every entry to a vector (resizable array) for now.
     kv* entry = vector_push(next_entry);
     entry->key = key_name;
@@ -41,65 +48,161 @@ header <- '[' _ key_name:string _ '"' key_value:string_with_spaces? '"' ']' EOL 
 }
 
 # Represents every end-game state given by the pgn specification.
-game_end <- "1-0"     { $$ = GS_BLACK_WON; }
-          / "0-1"     { $$ = GS_WHITE_WON; }
-          / "1/2-1/2" { $$ = GS_TIE;       }
-          / "*"       { $$ = GS_UNKNOWN;   }
+game_end <- "1-0"     { $$ = (void*)GS_BLACK_WON; }
+          / "0-1"     { $$ = (void*)GS_WHITE_WON; }
+          / "1/2-1/2" { $$ = (void*)GS_TIE;       }
+          / "*"       { $$ = (void*)GS_UNKNOWN;   }
 
-file <- 'a' / 'b' / 'c' / 'd' / 'e' / 'f' / 'g' / 'h'
-rank <- '1' / '2' / '3' / '4' / '5' / '6' / '7' / '8'
-square <- file rank
+file <- 
+        'a' { $$ = (void*)FILE_A; }
+    /   'b' { $$ = (void*)FILE_B; }
+    /   'c' { $$ = (void*)FILE_C; }
+    /   'd' { $$ = (void*)FILE_D; }
+    /   'e' { $$ = (void*)FILE_E; }
+    /   'f' { $$ = (void*)FILE_F; }
+    /   'g' { $$ = (void*)FILE_G; }
+    /   'h' { $$ = (void*)FILE_H; }
+
+rank <- 
+      '1' { $$ = (void*)RANK_1; }
+    / '2' { $$ = (void*)RANK_2; }
+    / '3' { $$ = (void*)RANK_3; }
+    / '4' { $$ = (void*)RANK_4; }
+    / '5' { $$ = (void*)RANK_5; }
+    / '6' { $$ = (void*)RANK_6; }
+    / '7' { $$ = (void*)RANK_7; }
+    / '8' { $$ = (void*)RANK_8; }
 
 # N for Knight
 # B for Bishop
 # R for rook
 # Q for queen
 # K for king
-san_piece <- 'N' / 'B' / 'R' / 'Q' / 'K'
+san_piece <- 
+      'N' { $$ = (void*)PIECE_KNIGHT; }
+    / 'B' { $$ = (void*)PIECE_BISHOP; }
+    / 'R' { $$ = (void*)PIECE_ROOK; }
+    / 'Q' { $$ = (void*)PIECE_QUEEN; }
+    / 'K' { $$ = (void*)PIECE_KING; }
+
+promoted_to <- 
+    'Q' { $$ =   (void*)PIECE_QUEEN; }
+    / 'R' { $$ = (void*)PIECE_ROOK; }
+    / 'B' { $$ = (void*)PIECE_BISHOP; }
+    / 'N' { $$ = (void*)PIECE_KNIGHT; }
+
+piece_moves <- 
+       p:san_piece f:file r:rank {
+            san_t* san = malloc(sizeof(san_t));
+            san->type = (san_piece_t)p;
+            san->inner.piece_move.destination.file = (file_t)f;
+            san->inner.piece_move.destination.rank = (rank_t)r;
+            san->inner.piece_move.captures = 0;
+            $$ = san;
+       }
+    /  p:san_piece 'x' f:file r:rank {
+            san_t* san = malloc(sizeof(san_t));
+            san->type = (san_piece_t)p;
+            san->inner.piece_move.destination.file = (file_t)f;
+            san->inner.piece_move.destination.rank = (rank_t)r;
+            san->inner.piece_move.captures = 1;
+            $$ = san;
+    }
+
+inner_pawn <- 
+        f:file r:rank 'x' df:file dr:rank  {
+            san_t* san = malloc(sizeof(san_t));
+            san->type = PIECE_PAWN;
+            san->inner.pawn_move.captures.file = (file_t)df;
+            san->inner.pawn_move.captures.rank = (rank_t)dr;
+            san->inner.pawn_move.destination.file = (file_t)f;
+            san->inner.pawn_move.destination.rank = (rank_t)r;
+            $$ = san;
+        }
+    /   f:file 'x' df:file dr:rank {
+            san_t* san = malloc(sizeof(san_t));
+            san->type = PIECE_PAWN;
+            san->inner.pawn_move.captures.file = (file_t)df;
+            san->inner.pawn_move.captures.rank = (rank_t)dr;
+            san->inner.pawn_move.destination.file = (file_t)f;
+            san->inner.pawn_move.destination.rank = RANK_NONE;
+            $$ = san;
+        }
+    /   f:file r:rank {
+            san_t* san = malloc(sizeof(san_t));
+            san->type = PIECE_PAWN;
+            san->inner.pawn_move.captures.file = FILE_NONE;
+            san->inner.pawn_move.captures.rank = RANK_NONE;
+            san->inner.pawn_move.destination.file = (file_t)f;
+            san->inner.pawn_move.destination.rank = (rank_t)r;
+            $$ = san;
+        }
+
+pawn <- 
+    p:inner_pawn '=' to:promoted_to {
+        ((san_t*)p)->inner.pawn_move.promoted = (san_piece_t)to;
+        $$ = p;
+    }
+    / p:inner_pawn {
+        ((san_t*)p)->inner.pawn_move.promoted = PIECE_UNKNOWN;
+        $$ = p;
+    }
+
+castling <- 'O-O' {
+        san_t* san = malloc(sizeof(san_t));
+        san->type = PIECE_ROOK;
+        san->inner.castling_move.side = KINGSIDE;
+        $$ = san;
+    }
+    / 'O-O-O' {
+        san_t* san = malloc(sizeof(san_t));
+        san->type = PIECE_ROOK;
+        san->inner.castling_move.side = QUEENSIDE;
+        $$ = san;
+    }
 
 int_move <- 
-    file 'x' file rank {}
-    / file 'x' file rank 'e.p.' {}
-    / file rank '=' san_piece {}
-    / san_piece file rank {}
-    / san_piece 'x' file rank {}
-    / san_piece file square {}
-    / san_piece rank square {}
-    / san_piece file 'x' square {}
-    / san_piece rank 'x' square {}
-    / file rank san_piece {}
-    / 'O-O' {}
-    / 'O-O-O' {}
-    / file rank {}
+        p:pawn { $$ = p; }
+        / p:piece_moves { $$ = p; }
+        / p:castling { $$ = p; }
 
 checkmate_mark <- '++' / '#'
-move <- int_move checkmate_mark {}
-    / int_move '+' {}
-    / int_move {}
+move <- r:int_move checkmate_mark { $$ = r; }
+    / r:int_move '+' { $$ = r; }
+    / r:int_move { $$ = r; }
 
-# san_end <- EOL / _
 comment_complete_move <- number '...'
-comment <- '{' string_with_spaces '}' _ comment_complete_move?
+comment <- '{' [^}]* '}' (EOL / _) comment_complete_move?
 
 move_comment <- 
-    move EOL? _ comment?
-    / move
+    m:move EOL? _ comment? { $$ = m; }
+    / m:move { $$ = m; }
 
-san <- move_comment {}
+san <- v:move_comment { $$ = v; }
 
 # Represent a round recursively using the same technique as the header
 rounds <- game_end {
     printf("INIT ROUND STACK\n");
     $$ = vector_new(sizeof(round));
-} / round_number:number '.' EOL? _? san (_ san)? next_entry:rounds {
+}
+/ round_number:number '.' EOL? _? fm:san _ sm:san next_entry:rounds {
     round* new = vector_push(next_entry);
-    new->number = round_number;
+    new->number = (void*)round_number;
+    new->first_move = fm;
+    new->second_move = sm;
+    $$ = next_entry;
+}
+ / round_number:number '.' EOL? _? fm:san next_entry:rounds {
+    round* new = vector_push(next_entry);
+    new->number = (void*)round_number;
+    new->first_move = fm;
     $$ = next_entry;
 }
 
 _      <- [ \t]*
-EOL    <- '\n' / '\r\n' / '\r'
-string_with_spaces <- < [A-Za-z0-9+-.,?$' \n\t]+ > { $$ = $1; }
-string <- <[A-Za-z0-9+-.,?$]+> { $$ = $1; }
+EOL    <- '\n'
+/ '\r\n'
+/ '\r'
+
 number <- <[0-9]+> { $$ = atoi($1); }
 %%
