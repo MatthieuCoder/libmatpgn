@@ -53,7 +53,7 @@ header <- '[' _ key_name:header_value _ '"' key_value:header_value '"' ']' EOL n
 # Represents every end-game state given by the pgn specification.
 game_end <- "1-0"     { $$ = (void*)GS_BLACK_WON; }
           / "0-1"     { $$ = (void*)GS_WHITE_WON; }
-          / "1/2-1/2" { $$ = (void*)GS_TIE;       }
+          / "1/2-1/2" { $$ = (void*)GS_DRAW;       }
           / "*"       { $$ = (void*)GS_UNKNOWN;   }
 
 file <- 
