@@ -10,14 +10,14 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include "string.h"
-#include <stdio.h> 
-#include <unistd.h> 
+#include <stdio.h>
+#include <unistd.h>
 
-static char *PRINT_BOARD = "\n\\chessboard\\\\";
+static char *PRINT_BOARD = "\\chessboard[showmover=false]";
 
 int main(int argc, char **argv)
 {
-    int opt, interval;
+    int opt, interval = 5;
     while ((opt = getopt(argc, argv, "n:")) != -1)
     {
         switch (opt)
@@ -43,6 +43,9 @@ int main(int argc, char **argv)
     printf("\\usepackage[utf8x]{inputenc}\n");
     printf("\\usepackage{xskak}\n");
     printf("\\usepackage{texmate}\n");
+    printf("\\usepackage{fancyhdr}\n");
+
+    char* title;
 
     for (int i = ast->header->length - 1; i != 0; i--)
     {
@@ -59,6 +62,7 @@ int main(int argc, char **argv)
         {
             printf("\\title{%s}\n", kv->value);
             printf("\\chessevent{%s}\n", kv->value);
+            title = kv->value;
         }
         else if (strcmp(kv->key, "Date ") == 0)
         {
@@ -67,12 +71,16 @@ int main(int argc, char **argv)
     }
 
     printf("\\begin{document}\n");
+    printf("\\pagestyle{fancy}\n");
+    printf("\\fancyhead{}\n");
+    printf("\\fancyhead[C]{\\textbf{%s}}\n", title);
     printf("\\maketitle\n");
+    printf("\\setchessboard{boardfontsize=10pt,labelfontsize=6pt}");
 
     printf("\\makegametitle\n");
 
     char out[255];
-    printf("\\mainline{");
+    printf("\\noindent\\begin{minipage}{\\textwidth}\\mainline{");
     for (int i = ast->round->length - 1; i != -1; i--)
     {
         round *r = vector_at(ast->round, i);
@@ -82,14 +90,15 @@ int main(int argc, char **argv)
         if (r->second_move != NULL)
         {
             san_to_str(r->second_move, &out);
-            printf("%s ", out);
+
+            printf(" %s ", out);
         }
-        if (r->number % interval == 0 || i == 0)
+        if (r->number % interval == 0 || i == 0 && r->second_move != NULL)
         {
-            printf("}\n%s\n", PRINT_BOARD);
+            printf("}\\\\\n%s\\\\\n\\end{minipage} ", PRINT_BOARD);
             if (i != 0)
             {
-                printf("\\mainline{");
+                printf("\\noindent\\begin{minipage}{\\textwidth}\\mainline{");
             }
         }
     }

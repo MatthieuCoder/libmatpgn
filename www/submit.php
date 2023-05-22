@@ -68,7 +68,7 @@ if (isset($_FILES['pgn_file'])) {
         echo $pdf;
 
     } else {
-        header("Content-Type: application/x-latex");
+        header("Content-Type: application/x-tex");
         echo $latex;
     }
 }
