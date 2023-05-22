@@ -19,7 +19,7 @@ if (isset($_FILES['pgn_file'])) {
     // Afficher le plateau tout les n coups.
     $interval = intval($_POST['interval'] || "0");
     // Création du processus chess2latex.
-    $chess2latex = proc_open("/usr/bin/chess2latex -n $interval", $descriptorspec, $chess2latex_pipes);
+    $chess2latex = proc_open("../build/chess2latex/chess2latex -n $interval", $descriptorspec, $chess2latex_pipes);
 
     if (!is_resource($chess2latex)) {
         http_response_code(500);
@@ -45,7 +45,7 @@ if (isset($_FILES['pgn_file'])) {
 
     if ($should_render) {
         // Exécution du processus render_latex.sh
-        $render = proc_open("bash /usr/bin/render_latex.sh", $descriptorspec, $render_pipes);
+        $render = proc_open("bash ../render_latex.sh", $descriptorspec, $render_pipes);
         if (!is_resource($render)) {
             http_response_code(500);
             die("L'exécution du processus de rendu à échoué.");
