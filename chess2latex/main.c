@@ -1,4 +1,3 @@
-// #define DEBUG
 #include <stddef.h>
 #include "libparse/parser.h"
 #include "libgame/game.h"
@@ -11,22 +10,28 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include "string.h"
+#include <stdio.h> 
+#include <unistd.h> 
 
 static char *PRINT_BOARD = "\n\\chessboard\\\\";
 
 int main(int argc, char **argv)
 {
-
-    int fd = open(argv[1], O_RDONLY);
-    if (fd == -1)
+    int opt, interval;
+    while ((opt = getopt(argc, argv, "n:")) != -1)
     {
-        printf("File not found.\n");
-        return 1;
+        switch (opt)
+        {
+        case 'n':
+            interval = atoi(optarg);
+            break;
+        default: /* aq?aq */
+            fprintf(stderr, "Usage: %s [-n interval]\n",
+                    argv[0]);
+            exit(EXIT_FAILURE);
+        }
     }
-    int len = lseek(fd, 0, SEEK_END);
-    void *data = mmap(0, len, PROT_READ, MAP_PRIVATE, fd, 0);
-
-    system_t *s = system_new(data);
+    system_t *s = system_new();
     parser_context_t *parser = parser_create(s);
 
     game *ast;
@@ -79,13 +84,16 @@ int main(int argc, char **argv)
             san_to_str(r->second_move, &out);
             printf("%s ", out);
         }
-        if (r->number % 3 == 0 || i == 0)
+        if (r->number % interval == 0 || i == 0)
         {
-            printf("}\n%s\n\\mainline{", PRINT_BOARD);
+            printf("}\n%s\n", PRINT_BOARD);
+            if (i != 0)
+            {
+                printf("\\mainline{");
+            }
         }
     }
-    printf("}\n");
-    printf("%s", PRINT_BOARD);
+    // printf("}\n");
     printf("\\end{document}\n");
     system_free(s);
 

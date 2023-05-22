@@ -5,8 +5,6 @@
 
 system_t* system_new(char* content) {
     system_t* system = malloc(sizeof(system_t));
-    system->content = content;
-    system->position = 0;
     system->alloc.begin = NULL;
     system->alloc.end = NULL;
     return system;
@@ -42,10 +40,5 @@ void* system_realloc(system_t* system, void* ptr, size_t size) {
 
 int system_read_char(system_t *system)
 {
-    if (system->content[system->position] == '\0')
-    {
-        return -1;
-    }
-
-    return system->content[system->position++];
+    return getchar();
 }

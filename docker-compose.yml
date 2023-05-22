@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    image: web
+    ports:
+      - 0.0.0.0:80:80
+    volumes:
+       - ./game.pgn:/game.pgn

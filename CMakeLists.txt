@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.18.0)
 
 project(Chess2LaTeX VERSION 1.0 LANGUAGES C)
 

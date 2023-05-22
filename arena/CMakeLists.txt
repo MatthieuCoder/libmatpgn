@@ -1,1 +1,1 @@
-add_library(arena INTERFACE arena.h)
+add_library(arena INTERFACE)
