@@ -1,9 +1,7 @@
 [submodule "third_party/packcc"]
 	path = third_party/packcc
 	url = https://github.com/arithy/packcc.git
-[submodule "packcc"]
-	path = packcc
-	url = https://github.com/arithy/packcc.git
+
 [submodule "third_party/arena"]
 	path = third_party/arena
 	url = https://github.com/tsoding/arena.git

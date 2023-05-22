@@ -1,3 +1,4 @@
+// #define DEBUG
 #include <stddef.h>
 #include "libparse/parser.h"
 #include "libgame/game.h"
@@ -9,58 +10,84 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include "string.h"
+
+static char *PRINT_BOARD = "\n\\chessboard\\\\";
 
 int main(int argc, char **argv)
 {
-    
-    system_t s;
 
     int fd = open(argv[1], O_RDONLY);
-    if (fd == -1) {
+    if (fd == -1)
+    {
         printf("File not found.\n");
         return 1;
     }
     int len = lseek(fd, 0, SEEK_END);
     void *data = mmap(0, len, PROT_READ, MAP_PRIVATE, fd, 0);
 
-    s.content = data;
-    s.position = 0;
-    parser_context_t *parser = parser_create(&s);
+    system_t *s = system_new(data);
+    parser_context_t *parser = parser_create(s);
 
     game *ast;
     parser_parse(parser, (void **)&ast);
+    parser_destroy(parser);
 
-    printf("** Pgn game \n");
-    printf("* %i headers\n", ast->header->length);
-    printf("* %i moves\n", ast->round->length);
+    printf("\\documentclass[article]{article}\n");
+    printf("\\usepackage[english]{babel}\n");
+    printf("\\usepackage[utf8x]{inputenc}\n");
+    printf("\\usepackage{xskak}\n");
+    printf("\\usepackage{texmate}\n");
 
-    printf("Header data: \n");
-    for (int i = 0; i < ast->header->length; i++)
+    for (int i = ast->header->length - 1; i != 0; i--)
     {
         kv *kv = vector_at(ast->header, i);
-
-        printf("\t=> %i: header(%s): %s\n", i, kv->key, kv->value);
-    }
-
-    printf("Move data: \n");
-    for (int i = 0; i < ast->round->length; i++)
-    {
-        round *round = vector_at(ast->round, i);
-        printf("\t=> Got game round(%i) %i\n", i, round->number);
-        char a[255];
-        san_to_str(*(round->first_move), &a);
-        printf("\t\t fm: %c: %s\n", round->first_move->type, a);
-        
-        if (round->second_move != 0) {
-        san_to_str(*(round->second_move), &a);
-            printf("\t\t sm: %c: %s\n", round->second_move->type, a);
+        if (strcmp(kv->key, "White ") == 0)
+        {
+            printf("\\whitename{%s}\n", kv->value);
+        }
+        else if (strcmp(kv->key, "Black ") == 0)
+        {
+            printf("\\blackname{%s}\n", kv->value);
+        }
+        else if (strcmp(kv->key, "Event ") == 0)
+        {
+            printf("\\title{%s}\n", kv->value);
+            printf("\\chessevent{%s}\n", kv->value);
+        }
+        else if (strcmp(kv->key, "Date ") == 0)
+        {
+            printf("\\date{%s}\n", kv->value);
         }
     }
 
-    parser_destroy(parser);
-    
-    san_t* t = (void*)malloc(sizeof(san_t));
+    printf("\\begin{document}\n");
+    printf("\\maketitle\n");
 
+    printf("\\makegametitle\n");
+
+    char out[255];
+    printf("\\mainline{");
+    for (int i = ast->round->length - 1; i != -1; i--)
+    {
+        round *r = vector_at(ast->round, i);
+        san_to_str(r->first_move, &out);
+        printf("%i. %s ", r->number, out);
+
+        if (r->second_move != NULL)
+        {
+            san_to_str(r->second_move, &out);
+            printf("%s ", out);
+        }
+        if (r->number % 3 == 0 || i == 0)
+        {
+            printf("}\n%s\n\\mainline{", PRINT_BOARD);
+        }
+    }
+    printf("}\n");
+    printf("%s", PRINT_BOARD);
+    printf("\\end{document}\n");
+    system_free(s);
 
     return 0;
 }

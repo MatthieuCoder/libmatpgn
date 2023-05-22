@@ -12,6 +12,7 @@ typedef enum san_piece
     PIECE_QUEEN = 'Q',
     PIECE_KING = 'K',
     PIECE_PAWN = 'P',
+    PIECE_CASTLING = '@',
 } san_piece_t;
 
 typedef enum file
@@ -50,6 +51,7 @@ typedef struct piece_move
 {
     square_t destination;
     char captures;
+    char from_file;
 } piece_move_t;
 
 typedef enum castling_side
@@ -73,6 +75,8 @@ typedef struct pawn_move
 typedef struct san
 {
     san_piece_t type;
+    char* comment;
+    char check, checkmate;
 
     union
     {
@@ -83,6 +87,6 @@ typedef struct san
 
 } san_t;
 
-int san_to_str(san_t, char*);
+int san_to_str(san_t*, char*);
 
 #endif

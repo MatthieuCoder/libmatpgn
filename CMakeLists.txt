@@ -8,3 +8,4 @@ add_subdirectory(libparse)
 add_subdirectory(chess2latex)
 
 add_subdirectory(packcc)
+add_subdirectory(arena)

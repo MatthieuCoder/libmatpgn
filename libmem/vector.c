@@ -17,7 +17,9 @@ void* vector_push(vector* vector) {
     }
 
     void* start_address = vector->data + vector->item_size * (vector->length);
+    #ifdef DEBUG
     printf("Item push to address: %x (base pt=%x) for %i bytes\n", start_address, vector->data, vector->item_size);
+    #endif
     vector->length++;
 
     return start_address;
@@ -38,6 +40,8 @@ void* vector_at(vector* vector, int index) {
         return (void*)0;
     }
     void* data = vector->data + index * vector->item_size;
-    //printf("Recovering data from index %i at address %x (base pt=%x)\n", index, data, vector);
+    #ifdef DEBUG
+    printf("Recovering data from index %i at address %x (base pt=%x)\n", index, data, vector);
+    #endif
     return data;
 }
