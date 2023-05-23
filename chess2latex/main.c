@@ -13,7 +13,30 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static char *PRINT_BOARD = "\\chessboard[showmover=false]";
+int print_comment(char *comment)
+{
+    for (int i = 0; i < strlen(comment); i++)
+    {
+        if (
+            comment[i] == '&' ||
+            comment[i] == '%' ||
+            comment[i] == '$' ||
+            comment[i] == '#' ||
+            comment[i] == '_' ||
+            comment[i] == '{' ||
+            comment[i] == '}' ||
+            comment[i] == '~' ||
+            comment[i] == '^' ||
+            comment[i] == '\\')
+        {
+        }
+        else
+        {
+
+            printf("%c", comment[i]);
+        }
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -44,8 +67,9 @@ int main(int argc, char **argv)
     printf("\\usepackage{xskak}\n");
     printf("\\usepackage{texmate}\n");
     printf("\\usepackage{fancyhdr}\n");
+    printf("\\usepackage{multicol}\n");
 
-    char* title;
+    char *title;
 
     for (int i = ast->header->length - 1; i != 0; i--)
     {
@@ -75,34 +99,62 @@ int main(int argc, char **argv)
     printf("\\fancyhead{}\n");
     printf("\\fancyhead[C]{\\textbf{%s}}\n", title);
     printf("\\maketitle\n");
-    printf("\\setchessboard{boardfontsize=10pt,labelfontsize=6pt}");
+    printf("\\xskaknewstyleitem[afterwhite=\\space,afterblack=\\space]{mystyle}\n");
 
+    // printf("\\xskaknewstyle[level=20,styleitem=mystyle]{mystyle}");
+    // printf("\\xskakset{style=mystyle}");
     printf("\\makegametitle\n");
 
     char out[255];
-    printf("\\noindent\\begin{minipage}{\\textwidth}\\mainline{");
+
+    printf("\\noindent\n");
+    printf("\\begin{minipage}{\\textwidth}\n");
+    printf("\\begin{multicols}{2}\n");
+    printf("\\mainline{");
+
     for (int i = ast->round->length - 1; i != -1; i--)
     {
         round *r = vector_at(ast->round, i);
         san_to_str(r->first_move, &out);
         printf("%i. %s ", r->number, out);
 
+        if (r->first_move->comment != NULL)
+        {
+            printf(" \\xskakcomment{");
+            print_comment(r->first_move->comment);
+            printf("} ");
+        }
+
         if (r->second_move != NULL)
         {
             san_to_str(r->second_move, &out);
-
             printf(" %s ", out);
+
+            if (r->second_move->comment != NULL)
+            {
+                printf(" \\xskakcomment{");
+                print_comment(r->second_move->comment);
+                printf("} ");
+            }
         }
-        if (r->number % interval == 0 || i == 0 && r->second_move != NULL)
+        if ((r->number % interval == 0 && r->second_move != NULL) || i == 0)
         {
-            printf("}\\\\\n%s\\\\\n\\end{minipage} ", PRINT_BOARD);
+            printf("}\n");
+            printf("\n\\chessboard[showmover=false]\n");
+            printf("\\end{multicols}\n");
+            printf("\\end{minipage}");
+
             if (i != 0)
             {
-                printf("\\noindent\\begin{minipage}{\\textwidth}\\mainline{");
+                printf("\\\\");
+                printf("\\noindent\n");
+                printf("\\begin{minipage}{\\textwidth}\n");
+                printf("\\begin{multicols}{2}\n");
+                printf("\\mainline{\n");
             }
         }
     }
-    // printf("}\n");
+
     printf("\\end{document}\n");
     system_free(s);
 

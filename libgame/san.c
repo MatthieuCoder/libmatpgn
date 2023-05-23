@@ -1,4 +1,5 @@
 #include "libgame/san.h"
+#include <string.h>
 
 int san_to_str(san_t* san, char *out)
 {
