@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y build-essential cmake
 COPY . .
 RUN mkdir build && cd build && cmake .. && make
 
-FROM webdevops/php-nginx:7.4 as server
+FROM webdevops/php-nginx as server
 RUN apt-get update && apt-get install -y texlive-full
 COPY www /app
 COPY --from=build /app/build/chess2latex/chess2latex /build/chess2latex/chess2latex

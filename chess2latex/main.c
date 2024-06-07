@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     // printf("\\xskakset{style=mystyle}");
     printf("\\makegametitle\n");
 
-    char out[255];
+    char* out = malloc(sizeof(char) * 2000);
 
     printf("\\noindent\n");
     printf("\\begin{minipage}{\\textwidth}\n");
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     for (int i = ast->round->length - 1; i != -1; i--)
     {
         round *r = vector_at(ast->round, i);
-        san_to_str(r->first_move, &out);
+        san_to_str(r->first_move, out);
         printf("%i. %s ", r->number, out);
 
         if (r->first_move->comment != NULL)
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 
         if (r->second_move != NULL)
         {
-            san_to_str(r->second_move, &out);
+            san_to_str(r->second_move, out);
             printf(" %s ", out);
 
             if (r->second_move->comment != NULL)

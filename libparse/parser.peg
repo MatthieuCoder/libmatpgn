@@ -227,14 +227,14 @@ rounds <- game_end {
 }
 / round_number:number '.' EOL? _? fm:san _ sm:san next_entry:rounds {
     round* new = vector_push(next_entry);
-    new->number = (void*)round_number;
+    new->number = (int)round_number;
     new->first_move = fm;
     new->second_move = sm;
     $$ = next_entry;
 }
  / round_number:number '.' EOL? _? fm:san next_entry:rounds {
     round* new = vector_push(next_entry);
-    new->number = (void*)round_number;
+    new->number = (int)round_number;
     new->first_move = fm;
     $$ = next_entry;
 }
@@ -244,5 +244,5 @@ EOL    <- '\n'
 / '\r\n'
 / '\r'
 
-number <- <[0-9]+> { $$ = atoi($1); }
+number <- <[0-9]+> { $$ = (void*) atoi($1); }
 %%
